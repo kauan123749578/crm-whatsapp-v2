@@ -1,0 +1,33 @@
+import { Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { APP_GUARD } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
+import { join } from 'node:path';
+import { HealthController } from './health.controller';
+import { PrismaModule } from './prisma/prisma.module';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
+import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+
+@Module({
+  imports: [
+    PrismaModule,
+    AuthModule,
+    WhatsAppModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      exclude: ['/api*', '/health*', '/socket.io*']
+    })
+  ],
+  controllers: [HealthController],
+  providers: [
+    Reflector,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard
+    }
+  ]
+})
+export class AppModule {}
+
+

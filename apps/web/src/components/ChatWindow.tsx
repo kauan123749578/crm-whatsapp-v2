@@ -1,0 +1,265 @@
+import React, { useState, useRef, useEffect } from 'react';
+import type { Message } from '../api';
+
+type Props = {
+  chatName: string | null;
+  messages: Message[];
+  onSendMessage: (text: string, file?: File) => void;
+  isLoading: boolean;
+  onToggleSidebar: () => void;
+  showSidebar: boolean;
+};
+
+export default function ChatWindow({ chatName, messages, onSendMessage, isLoading, onToggleSidebar, showSidebar }: Props) {
+  const [message, setMessage] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const formatTime = (ts: number) => {
+    if (!ts) return '';
+    const date = new Date(ts * 1000);
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDate = (ts: number) => {
+    if (!ts) return '';
+    const date = new Date(ts * 1000);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days === 0) return 'Hoje';
+    if (days === 1) return 'Ontem';
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const handleSend = () => {
+    if (message.trim() || selectedFile) {
+      onSendMessage(message.trim(), selectedFile || undefined);
+      setMessage('');
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      // Opcional: mostrar preview
+    }
+  };
+
+  const groupedMessages = messages.reduce((acc, msg) => {
+    const date = formatDate(msg.ts);
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(msg);
+    return acc;
+  }, {} as Record<string, Message[]>);
+
+  if (!chatName) {
+    return (
+      <div className="flex-1 flex flex-col bg-zinc-950 items-center justify-center text-zinc-500">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <p className="text-lg">Selecione uma conversa para iniciar</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col h-full bg-zinc-950 relative">
+      <div className="h-16 px-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-900">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-600 flex items-center justify-center text-white font-bold">
+            {chatName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-lg leading-none">{chatName}</h3>
+            <span className="text-zinc-500 text-xs">WhatsApp</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-zinc-400">
+          <button className="hover:text-white transition-colors" title="Buscar">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+          <button className="hover:text-white transition-colors" title="Ligar">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+          </button>
+          <button className="hover:text-white transition-colors" title="Vídeo">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </button>
+          <button onClick={onToggleSidebar} className="hover:text-white transition-colors" title="Info">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {showSidebar ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              )}
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {isLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                <div className="animate-pulse">
+                  <div
+                    className={`h-16 ${i % 2 === 0 ? 'bg-yellow-400/20' : 'bg-zinc-800'} rounded-2xl`}
+                    style={{ width: `${150 + Math.random() * 120}px` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : Object.keys(groupedMessages).length > 0 ? (
+          Object.entries(groupedMessages).map(([date, msgs]) => (
+            <div key={date}>
+              <div className="flex justify-center mb-4">
+                <span className="bg-zinc-900 text-zinc-400 text-xs px-3 py-1 rounded-full">{date}</span>
+              </div>
+              {msgs.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.fromMe ? 'justify-end' : 'justify-start'} mb-2`}>
+                  <div
+                    className={`
+                      max-w-[70%] px-4 py-3 rounded-2xl text-sm
+                      ${msg.fromMe ? 'bg-yellow-400 text-black rounded-tr-none' : 'bg-zinc-900 text-white rounded-tl-none border border-zinc-800'}
+                    `}
+                  >
+                    {/* Preview de mídia */}
+                    {msg.hasMedia && msg.mediaType?.startsWith('image/') && (
+                      <div className="mb-2 rounded-lg overflow-hidden bg-zinc-900/50 p-2 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs text-zinc-400">Imagem enviada</span>
+                      </div>
+                    )}
+                    {msg.hasMedia && msg.mediaType?.startsWith('video/') && (
+                      <div className="mb-2 rounded-lg overflow-hidden bg-zinc-900/50 p-2 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs text-zinc-400">Vídeo enviado</span>
+                      </div>
+                    )}
+                    {msg.hasMedia && !msg.mediaType?.startsWith('image/') && !msg.mediaType?.startsWith('video/') && (
+                      <div className="mb-2 rounded-lg overflow-hidden bg-zinc-900/50 p-2 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-xs text-zinc-400">Arquivo enviado</span>
+                      </div>
+                    )}
+                    <p>{msg.body || (msg.hasMedia ? '[Mídia]' : '')}</p>
+                    <span
+                      className={`
+                        text-[10px] mt-1 block text-right
+                        ${msg.fromMe ? 'text-black/60' : 'text-zinc-500'}
+                      `}
+                    >
+                      {formatTime(msg.ts)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-full text-zinc-500">
+            <p>Nenhuma mensagem</p>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="p-4 bg-zinc-900 border-t border-zinc-800">
+        {selectedFile && (
+          <div className="mb-2 p-2 bg-zinc-800 rounded-lg flex items-center justify-between text-sm">
+            <span className="text-zinc-300 truncate flex-1">{selectedFile.name}</span>
+            <button
+              onClick={() => {
+                setSelectedFile(null);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+              className="ml-2 text-zinc-500 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        <div className="bg-zinc-950 rounded-2xl flex items-end p-2 border border-zinc-800 focus-within:border-yellow-400 transition-colors">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-3 text-zinc-400 hover:text-white transition-colors"
+            title="Anexar arquivo"
+            type="button"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+            onChange={handleFileSelect}
+          />
+
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="Digite uma mensagem..."
+            className="flex-1 bg-transparent text-white placeholder-zinc-500 p-3 h-12 max-h-32 resize-none focus:outline-none"
+            rows={1}
+          />
+
+          {message.trim() ? (
+            <button
+              onClick={handleSend}
+              className="p-3 bg-yellow-400 text-black rounded-xl hover:bg-yellow-300 transition-colors font-semibold"
+            >
+              Enviar
+            </button>
+          ) : (
+            <button
+              className="p-3 text-zinc-400 hover:text-white transition-colors"
+              title="Gravar áudio"
+              type="button"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
