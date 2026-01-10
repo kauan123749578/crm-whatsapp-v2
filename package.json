@@ -1,0 +1,17 @@
+{
+  "name": "crm-v2",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @crm/backend",
+    "build": "npm run prisma:generate -w @crm/backend && npm run build -w @crm/web && npm run copy:web && npm run build -w @crm/backend",
+    "start": "npm run prisma:generate -w @crm/backend && node apps/backend/dist/main.js",
+    "copy:web": "node tools/copy-web-dist.mjs",
+    "db:push": "npm run prisma:generate -w @crm/backend && npm run prisma:push -w @crm/backend",
+    "db:migrate": "npm run prisma:generate -w @crm/backend && npm run prisma:migrate -w @crm/backend"
+  }
+}
+
+
