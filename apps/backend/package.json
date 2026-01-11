@@ -7,7 +7,7 @@
     "build": "rimraf dist && tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
+    "prisma:push": "prisma db push --skip-generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts",
     "db:init": "node dist/scripts/init-db.js || echo 'Init DB skipped'"

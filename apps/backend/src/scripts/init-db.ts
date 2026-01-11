@@ -17,6 +17,18 @@ async function initDb() {
     await prisma.$connect();
     console.log('✅ Conectado ao banco de dados');
 
+    // Verificar se a tabela users existe (testando com uma query simples)
+    try {
+      await prisma.$queryRaw`SELECT 1 FROM "users" LIMIT 1`;
+    } catch (tableError: any) {
+      if (tableError.message?.includes('não existe') || tableError.message?.includes('does not exist')) {
+        console.error('❌ Tabelas não criadas! Execute: npm run db:push');
+        console.error('   Ou no Railway Shell: npm run db:push -w @crm/backend');
+        return;
+      }
+      throw tableError;
+    }
+
     // Verificar se já existe usuário admin
     const adminExists = await prisma.user.findUnique({
       where: { username: 'admin' }
@@ -45,6 +57,9 @@ async function initDb() {
 
   } catch (error: any) {
     console.error('❌ Erro ao inicializar banco:', error.message);
+    if (error.message?.includes('não existe') || error.message?.includes('does not exist')) {
+      console.error('💡 Execute primeiro: npm run db:push');
+    }
     // Não lançar erro para não quebrar o start
   } finally {
     await prisma.$disconnect();
