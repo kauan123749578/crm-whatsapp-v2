@@ -51,6 +51,18 @@ export default function App() {
 
   const socketRef = useRef<Socket | null>(null);
   const retryTimer = useRef<number | null>(null);
+  
+  // Cache de dados por instância (preserva chats e mensagens ao trocar de instância)
+  const instanceCacheRef = useRef<Record<string, {
+    chats: Chat[];
+    messages: Record<string, Message[]>; // chatId -> messages
+    selectedChatId: string | null;
+  }>>({});
+  
+  // Refs para acessar valores atuais dos estados
+  const chatsRef = useRef<Chat[]>([]);
+  const selectedChatIdRef = useRef<string | null>(null);
+  const messagesRef = useRef<Message[]>([]);
 
   // Verificar autenticação ao carregar (só uma vez)
   useEffect(() => {
@@ -123,7 +135,25 @@ export default function App() {
         return;
       }
       setChats(data);
-      if (!selectedChatId && data.length) setSelectedChatId(data[0].id);
+      chatsRef.current = data; // Atualizar ref
+      // Salvar no cache
+      if (!instanceCacheRef.current[id]) {
+        instanceCacheRef.current[id] = { chats: [], messages: {}, selectedChatId: null };
+      }
+      instanceCacheRef.current[id].chats = data;
+      // Restaurar chat selecionado do cache se não houver selecionado
+      if (!selectedChatIdRef.current) {
+        const cachedSelected = instanceCacheRef.current[id].selectedChatId;
+        if (cachedSelected && data.some(c => c.id === cachedSelected)) {
+          const newSelectedId = cachedSelected;
+          setSelectedChatId(newSelectedId);
+          selectedChatIdRef.current = newSelectedId;
+        } else if (data.length) {
+          const newSelectedId = data[0].id;
+          setSelectedChatId(newSelectedId);
+          selectedChatIdRef.current = newSelectedId;
+        }
+      }
     } catch (e: any) {
       setChatError(String(e?.message || e));
     } finally {
@@ -136,6 +166,12 @@ export default function App() {
     try {
       const data = await fetchMessages(instanceId, chatId, 80);
       setMessages(data);
+      messagesRef.current = data; // Atualizar ref
+      // Salvar no cache
+      if (!instanceCacheRef.current[instanceId]) {
+        instanceCacheRef.current[instanceId] = { chats: [], messages: {}, selectedChatId: null };
+      }
+      instanceCacheRef.current[instanceId].messages[chatId] = data;
     } finally {
       setLoadingMsgs(false);
     }
@@ -175,7 +211,7 @@ export default function App() {
           setMessages((prev) => {
             // Evitar duplicatas
             if (prev.some((m) => m.id === p.message.id)) return prev;
-            return [
+            const newMessages = [
               ...prev,
               {
                 id: p.message.id,
@@ -187,6 +223,12 @@ export default function App() {
                 mediaType: p.message.mediaType || null
               }
             ];
+            // Atualizar ref e cache também
+            messagesRef.current = newMessages;
+            if (instanceCacheRef.current[instanceId]) {
+              instanceCacheRef.current[instanceId].messages[selectedChatId] = newMessages;
+            }
+            return newMessages;
           });
         }
         // Atualizar lista de chats automaticamente
@@ -200,10 +242,12 @@ export default function App() {
         // Atualizar chat na lista se existir
         setChats((prev) => {
           const existingIndex = prev.findIndex((c) => c.id === p.chatId);
+          let updated: Chat[];
+          
           if (existingIndex >= 0) {
             // Atualizar chat existente, mas PRESERVAR tags, stage e nome
             const existing = prev[existingIndex];
-            const updated = [...prev];
+            updated = [...prev];
             
             // Lógica para preservar nome: se o nome novo for ID ou vazio, manter o existente
             const newName = p.chat.name;
@@ -227,7 +271,7 @@ export default function App() {
             };
             // Mover para o topo (última mensagem)
             const [moved] = updated.splice(existingIndex, 1);
-            return [moved, ...updated];
+            updated = [moved, ...updated];
           } else {
             // Novo chat, adicionar no início (garantir tags e stage padrão)
             // Verificar se nome é válido (não é ID)
@@ -238,13 +282,21 @@ export default function App() {
               chatName = idPart.length <= 20 ? idPart : `${idPart.substring(0, 17)}...`;
             }
             
-            return [{
+            updated = [{
               ...p.chat,
               name: chatName,
               tags: Array.isArray(p.chat.tags) ? p.chat.tags : [],
               stage: p.chat.stage || 'Entrada'
             }, ...prev];
           }
+          
+          // Atualizar ref e cache
+          chatsRef.current = updated;
+          if (instanceCacheRef.current[instanceId]) {
+            instanceCacheRef.current[instanceId].chats = updated;
+          }
+          
+          return updated;
         });
       }
     });
@@ -274,16 +326,56 @@ export default function App() {
   }, [qr]);
 
   useEffect(() => {
+    const prevInstanceId = instanceId;
+    
+    // Salvar estado atual no cache antes de trocar (usar refs para valores atuais)
+    if (prevInstanceId && prevInstanceId !== activeChannel) {
+      if (!instanceCacheRef.current[prevInstanceId]) {
+        instanceCacheRef.current[prevInstanceId] = { chats: [], messages: {}, selectedChatId: null };
+      }
+      instanceCacheRef.current[prevInstanceId].chats = chatsRef.current;
+      instanceCacheRef.current[prevInstanceId].selectedChatId = selectedChatIdRef.current;
+      if (selectedChatIdRef.current && messagesRef.current.length > 0) {
+        instanceCacheRef.current[prevInstanceId].messages[selectedChatIdRef.current] = messagesRef.current;
+      }
+    }
+    
+    // Atualizar instância
     setInstanceId(activeChannel);
     setStatus({ instanceId: activeChannel, status: 'idle' });
     setQr(null);
     setQrImg(null);
-    setChats([]);
-    setSelectedChatId(null);
-    setMessages([]);
     setSearchQuery('');
     setShowRightSidebar(false);
     setShowMetrics(false);
+    
+    // Restaurar estado do cache da nova instância
+    const cached = instanceCacheRef.current[activeChannel];
+    if (cached && cached.chats.length > 0) {
+      setChats(cached.chats);
+      chatsRef.current = cached.chats;
+      setSelectedChatId(cached.selectedChatId);
+      selectedChatIdRef.current = cached.selectedChatId;
+      if (cached.selectedChatId && cached.messages[cached.selectedChatId]) {
+        setMessages(cached.messages[cached.selectedChatId]);
+        messagesRef.current = cached.messages[cached.selectedChatId];
+      } else {
+        setMessages([]);
+        messagesRef.current = [];
+      }
+    } else {
+      // Nova instância sem cache - limpar tudo
+      setChats([]);
+      chatsRef.current = [];
+      setSelectedChatId(null);
+      selectedChatIdRef.current = null;
+      setMessages([]);
+      messagesRef.current = [];
+      // Inicializar cache vazio
+      if (!instanceCacheRef.current[activeChannel]) {
+        instanceCacheRef.current[activeChannel] = { chats: [], messages: {}, selectedChatId: null };
+      }
+    }
   }, [activeChannel]);
 
   useEffect(() => {
@@ -460,11 +552,12 @@ export default function App() {
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          <ChatList
+            <ChatList
             chats={chats}
             activeChatId={selectedChatId}
             onSelectChat={(id) => {
               setSelectedChatId(id);
+              selectedChatIdRef.current = id;
               void loadMsgs(id);
             }}
             isLoading={loadingChats}
