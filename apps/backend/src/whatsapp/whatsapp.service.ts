@@ -564,9 +564,12 @@ export class WhatsAppService {
       const tryFetch = async () => {
         // Garantir que o objeto injetado do whatsapp-web.js existe antes de chamar getChats()
         await this.ensureWWebJS(inst);
-        const chats = await inst.client.getChats();
+        const allChats = await inst.client.getChats();
+        // Otimização: processar apenas os primeiros 300 chats para evitar timeout
+        // (depois ainda filtra e pega só 200, mas processa menos)
+        const chatsToProcess = allChats.slice(0, 300);
         const mapped = await Promise.all(
-          chats.map(mapChat)
+          chatsToProcess.map(mapChat)
         );
         return mapped
           .filter((c: any) => !!c.id)
