@@ -10,6 +10,7 @@
     "prisma:push": "prisma db push --skip-generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts",
+    "db:push": "prisma db push --skip-generate",
     "db:init": "node dist/scripts/init-db.js || echo 'Init DB skipped'"
   },
   "dependencies": {
