@@ -83,8 +83,14 @@ export class WhatsAppService {
           }
           this.logger.log(`[${inst.id}] WWebJS reinjetado com sucesso`);
         } catch (e) {
-          this.logger.error(`[${inst.id}] Falha ao reinjetar WWebJS: ${(e as Error).message}`);
-          throw new Error(`Falha ao reinjetar WWebJS: ${(e as Error).message}`);
+          const errorMsg = (e as Error).message || String(e);
+          // Se o erro é sobre RegistrationUtils ou contexto perdido, forçar reinicialização
+          if (/RegistrationUtils|context|undefined/i.test(errorMsg)) {
+            this.logger.warn(`[${inst.id}] Contexto perdido detectado, forçando reinicialização...`);
+            throw new Error('CONTEXT_LOST');
+          }
+          this.logger.error(`[${inst.id}] Falha ao reinjetar WWebJS: ${errorMsg}`);
+          throw new Error(`Falha ao reinjetar WWebJS: ${errorMsg}`);
         }
       }
 
@@ -98,7 +104,13 @@ export class WhatsAppService {
         await new Promise((r) => setTimeout(r, 500));
       }
     } catch (e) {
-      this.logger.error(`[${inst.id}] ensureWWebJS falhou: ${(e as Error).message}`);
+      const errorMsg = (e as Error).message || String(e);
+      // Se o erro é sobre contexto perdido, lançar erro específico
+      if (/CONTEXT_LOST|RegistrationUtils|context/i.test(errorMsg)) {
+        this.logger.error(`[${inst.id}] Contexto do WhatsApp perdido, precisa reinicializar`);
+        throw new Error('CONTEXT_LOST');
+      }
+      this.logger.error(`[${inst.id}] ensureWWebJS falhou: ${errorMsg}`);
       throw e;
     }
   }
@@ -563,7 +575,16 @@ export class WhatsAppService {
 
       const tryFetch = async () => {
         // Garantir que o objeto injetado do whatsapp-web.js existe antes de chamar getChats()
-        await this.ensureWWebJS(inst);
+        try {
+          await this.ensureWWebJS(inst);
+        } catch (e: any) {
+          const errorMsg = String(e?.message || '');
+          // Se o contexto foi perdido, lançar erro para usar fallback do DB
+          if (/CONTEXT_LOST|RegistrationUtils|context/i.test(errorMsg)) {
+            throw new Error('CONTEXT_LOST');
+          }
+          throw e;
+        }
         const allChats = await inst.client.getChats();
         // Otimização: processar apenas os primeiros 300 chats para evitar timeout
         // (depois ainda filtra e pega só 200, mas processa menos)
@@ -658,11 +679,16 @@ export class WhatsAppService {
             // Espera um pouco e tenta novamente
             if (/timed out|protocolTimeout|detached Frame|Target closed|Protocol error|Execution context|getChats|WWebJS|Store/i.test(msg)) {
               // Se o contexto quebrou, tenta reiniciar a instância (LocalAuth deve recuperar sem QR)
-              if (/detached Frame|Target closed|Execution context|Store não encontrado|getChats/i.test(msg)) {
+              if (/detached Frame|Target closed|Execution context|Store não encontrado|getChats|CONTEXT_LOST|RegistrationUtils/i.test(msg)) {
                 try {
+                  this.logger.warn(`[${instanceId}] Contexto perdido detectado, reiniciando instância...`);
                   await this.restartInstance(instanceId);
+                  // Aguardar um pouco após reiniciar
+                  await new Promise((r) => setTimeout(r, 5000));
                 } catch (re) {
-                  this.logger.warn(`restartInstance falhou: ${String((re as any)?.message || re)}`);
+                  this.logger.warn(`[${instanceId}] restartInstance falhou: ${String((re as any)?.message || re)}`);
+                  // Se reiniciar falhou, lançar erro para usar fallback do DB
+                  throw new Error('Instância precisa ser reconectada manualmente');
                 }
               }
               await new Promise((r) => setTimeout(r, 3000));
@@ -674,9 +700,33 @@ export class WhatsAppService {
         throw lastErr;
       } catch (e: any) {
         const msg = String(e?.message || '');
+        // Se o contexto foi perdido, tentar reiniciar antes de usar DB
+        if (/CONTEXT_LOST|RegistrationUtils|context/i.test(msg)) {
+          this.logger.warn(`[${instanceId}] Contexto perdido em getChats, tentando reiniciar...`);
+          try {
+            await this.restartInstance(instanceId);
+            // Aguardar um pouco e tentar novamente
+            await new Promise((r) => setTimeout(r, 5000));
+            // Tentar uma vez mais
+            try {
+              await this.ensureWWebJS(inst);
+              const allChats = await inst.client.getChats();
+              const chatsToProcess = allChats.slice(0, 300);
+              const mapped = await Promise.all(chatsToProcess.map(mapChat));
+              return mapped
+                .filter((c: any) => !!c.id)
+                .sort((a: any, b: any) => (b.lastTs || 0) - (a.lastTs || 0))
+                .slice(0, 200);
+            } catch (retryError) {
+              this.logger.warn(`[${instanceId}] Retry após reiniciar falhou, usando DB`);
+            }
+          } catch (restartError) {
+            this.logger.warn(`[${instanceId}] Reiniciar falhou: ${String((restartError as any)?.message || restartError)}`);
+          }
+        }
         // Fallback: DB (se habilitado)
         if (this.dbEnabled) {
-          this.logger.warn(`getChats falhou, usando DB. err=${msg}`);
+          this.logger.warn(`[${instanceId}] getChats falhou, usando DB. err=${msg}`);
           const dbChats = await this.prisma.chat.findMany({
             where: { instanceId },
             orderBy: { lastTs: 'desc' },
