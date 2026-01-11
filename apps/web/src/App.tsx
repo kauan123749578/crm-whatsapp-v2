@@ -141,17 +141,29 @@ export default function App() {
         instanceCacheRef.current[id] = { chats: [], messages: {}, selectedChatId: null };
       }
       instanceCacheRef.current[id].chats = data;
-      // Restaurar chat selecionado do cache se não houver selecionado
+      // Restaurar chat selecionado e mensagens do cache se não houver selecionado
       if (!selectedChatIdRef.current) {
         const cachedSelected = instanceCacheRef.current[id].selectedChatId;
         if (cachedSelected && data.some(c => c.id === cachedSelected)) {
           const newSelectedId = cachedSelected;
           setSelectedChatId(newSelectedId);
           selectedChatIdRef.current = newSelectedId;
+          // Restaurar mensagens do cache também
+          if (instanceCacheRef.current[id].messages[newSelectedId]) {
+            setMessages(instanceCacheRef.current[id].messages[newSelectedId]);
+            messagesRef.current = instanceCacheRef.current[id].messages[newSelectedId];
+          }
         } else if (data.length) {
           const newSelectedId = data[0].id;
           setSelectedChatId(newSelectedId);
           selectedChatIdRef.current = newSelectedId;
+        }
+      } else {
+        // Se já tem chat selecionado, restaurar mensagens do cache se existirem
+        const currentSelected = selectedChatIdRef.current;
+        if (currentSelected && instanceCacheRef.current[id].messages[currentSelected]) {
+          setMessages(instanceCacheRef.current[id].messages[currentSelected]);
+          messagesRef.current = instanceCacheRef.current[id].messages[currentSelected];
         }
       }
     } catch (e: any) {
@@ -164,7 +176,8 @@ export default function App() {
   const loadMsgs = async (chatId: string) => {
     setLoadingMsgs(true);
     try {
-      const data = await fetchMessages(instanceId, chatId, 80);
+      // Carregar mais mensagens (500 para garantir que carrega todas)
+      const data = await fetchMessages(instanceId, chatId, 500);
       setMessages(data);
       messagesRef.current = data; // Atualizar ref
       // Salvar no cache
@@ -199,7 +212,22 @@ export default function App() {
       if (p.instanceId === instanceId) {
         setStatus(p);
         if (p.status === 'ready') {
-          void loadChats(instanceId, true);
+          // Carregar chats, mas preservar cache de mensagens
+          void loadChats(instanceId, true).then(() => {
+            // Após carregar chats, restaurar mensagens do cache se houver
+            const cached = instanceCacheRef.current[instanceId];
+            if (cached && cached.selectedChatId && cached.messages[cached.selectedChatId]) {
+              // Aguardar um pouco para garantir que chats foram carregados
+              setTimeout(() => {
+                setMessages(cached.messages[cached.selectedChatId]);
+                messagesRef.current = cached.messages[cached.selectedChatId];
+                if (!selectedChatIdRef.current) {
+                  setSelectedChatId(cached.selectedChatId);
+                  selectedChatIdRef.current = cached.selectedChatId;
+                }
+              }, 500);
+            }
+          });
         }
       }
     });
@@ -346,19 +374,45 @@ export default function App() {
     setQr(null);
     setQrImg(null);
     setSearchQuery('');
-    setShowRightSidebar(false);
+    // Preservar estado do sidebar ao trocar de instância (não fechar automaticamente)
+    // setShowRightSidebar(false);
     setShowMetrics(false);
     
     // Restaurar estado do cache da nova instância
     const cached = instanceCacheRef.current[activeChannel];
     if (cached && cached.chats.length > 0) {
+      // Restaurar chats
       setChats(cached.chats);
       chatsRef.current = cached.chats;
-      setSelectedChatId(cached.selectedChatId);
-      selectedChatIdRef.current = cached.selectedChatId;
-      if (cached.selectedChatId && cached.messages[cached.selectedChatId]) {
-        setMessages(cached.messages[cached.selectedChatId]);
-        messagesRef.current = cached.messages[cached.selectedChatId];
+      
+      // Restaurar chat selecionado e mensagens
+      if (cached.selectedChatId) {
+        setSelectedChatId(cached.selectedChatId);
+        selectedChatIdRef.current = cached.selectedChatId;
+        
+        // Restaurar mensagens do cache se existirem
+        if (cached.messages[cached.selectedChatId] && cached.messages[cached.selectedChatId].length > 0) {
+          setMessages(cached.messages[cached.selectedChatId]);
+          messagesRef.current = cached.messages[cached.selectedChatId];
+        } else {
+          // Se não tem no cache, carregar do servidor
+          setTimeout(() => {
+            void loadMsgs(cached.selectedChatId);
+          }, 100);
+        }
+      } else if (cached.chats.length > 0) {
+        // Selecionar primeiro chat se não tiver selecionado
+        const firstChatId = cached.chats[0].id;
+        setSelectedChatId(firstChatId);
+        selectedChatIdRef.current = firstChatId;
+        if (cached.messages[firstChatId] && cached.messages[firstChatId].length > 0) {
+          setMessages(cached.messages[firstChatId]);
+          messagesRef.current = cached.messages[firstChatId];
+        } else {
+          setTimeout(() => {
+            void loadMsgs(firstChatId);
+          }, 100);
+        }
       } else {
         setMessages([]);
         messagesRef.current = [];

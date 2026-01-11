@@ -593,7 +593,7 @@ export class WhatsAppService {
           chatsToProcess.map(mapChat)
         );
         return mapped
-          .filter((c: any) => !!c.id)
+          .filter((c: any) => !!c.id && !c.isGroup) // Filtrar grupos - apenas contatos individuais
           .sort((a: any, b: any) => (b.lastTs || 0) - (a.lastTs || 0))
           .slice(0, 200);
       };
