@@ -54,53 +54,51 @@ export default function ChatList({ chats, activeChatId, onSelectChat, isLoading,
   const getTagColor = (tag: string) => TAG_COLORS[tag] || '#9CA3AF';
 
   return (
-    <div className="w-[380px] bg-zinc-900/50 backdrop-blur-sm border-r border-zinc-800/50 flex flex-col h-full shadow-xl">
-      <div className="p-5 border-b border-zinc-800/50 bg-zinc-900/80">
-        <h2 className="text-2xl font-bold text-white mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Mensagens</h2>
-        <div className="relative">
+    <div className="w-[380px] bg-zinc-950 border-r border-zinc-900 flex flex-col h-full shadow-2xl relative z-20">
+      <div className="p-6 border-b border-zinc-900 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-30">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-black text-white italic tracking-tighter uppercase">
+            CONTATOS <span className="text-yellow-500">VIP</span>
+          </h2>
+          <div className="flex gap-2">
+             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+          </div>
+        </div>
+        <div className="relative group">
+          <div className="absolute inset-0 bg-yellow-500/5 rounded-xl blur-lg group-focus-within:bg-yellow-500/10 transition-all"></div>
           <input
             type="text"
-            placeholder="Buscar contatos..."
+            placeholder="Buscar parceiro..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-zinc-950/80 text-white pl-10 pr-4 py-3 rounded-xl border border-zinc-800 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 text-sm transition-all duration-200"
+            className="relative w-full bg-zinc-900/50 text-white pl-11 pr-4 py-3.5 rounded-xl border border-zinc-800 focus:border-yellow-500/50 focus:outline-none focus:ring-4 focus:ring-yellow-500/5 text-sm transition-all duration-300 placeholder:text-zinc-600 font-medium"
           />
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-yellow-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
       </div>
 
-      <div className="px-5 py-3 flex gap-2 text-sm border-b border-zinc-800/50 bg-zinc-900/50">
+      <div className="px-6 py-4 flex gap-2 text-[11px] border-b border-zinc-900 bg-zinc-950/30 uppercase tracking-[0.2em] font-black italic">
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
             filter === 'all' 
-              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-md' 
-              : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+              ? 'bg-yellow-500 text-black shadow-[0_0_20px_rgba(234,179,8,0.2)]' 
+              : 'text-zinc-600 hover:text-zinc-400'
           }`}
         >
           Todos
         </button>
         <button
           onClick={() => setFilter('unread')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
             filter === 'unread' 
-              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-md' 
-              : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+              ? 'bg-yellow-500 text-black shadow-[0_0_20px_rgba(234,179,8,0.2)]' 
+              : 'text-zinc-600 hover:text-zinc-400'
           }`}
         >
-          Não lidos
-        </button>
-        <button
-          onClick={() => setFilter('groups')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-            filter === 'groups' 
-              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-md' 
-              : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-          }`}
-        >
-          Grupos
+          Novos
         </button>
       </div>
 
@@ -127,78 +125,76 @@ export default function ChatList({ chats, activeChatId, onSelectChat, isLoading,
                 key={chat.id}
                 onClick={() => onSelectChat(chat.id)}
                 className={`
-                  px-5 py-4 cursor-pointer transition-all duration-200 border-b border-zinc-800/30
+                  px-6 py-5 cursor-pointer transition-all duration-300 border-b border-zinc-900 group
                   ${isActive 
-                    ? 'bg-gradient-to-r from-zinc-800/80 to-zinc-800/50 border-l-4 border-l-yellow-400 shadow-lg' 
-                    : 'hover:bg-zinc-800/30 border-l-4 border-l-transparent hover:border-l-yellow-400/30'
+                    ? 'bg-zinc-900 border-l-[6px] border-l-yellow-500 shadow-inner' 
+                    : 'hover:bg-zinc-900/50 border-l-[6px] border-l-transparent hover:border-l-yellow-500/30'
                   }
                 `}
               >
-                <div className="flex gap-4">
+                <div className="flex gap-5">
                   <div className="flex-shrink-0 relative">
+                    <div className={`absolute -inset-1 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isActive ? 'bg-yellow-500/20 opacity-100' : 'bg-white/5'}`}></div>
                     {chat.profilePicUrl ? (
                       <img
                         src={chat.profilePicUrl}
                         alt={chat.name || chat.id}
-                        className="w-14 h-14 rounded-full object-cover border-2 border-zinc-700/50 shadow-lg ring-2 ring-zinc-800/50"
+                        className="relative w-16 h-16 rounded-2xl object-cover border border-zinc-800 shadow-2xl group-hover:border-yellow-500/50 transition-colors"
                         onError={(e) => {
-                          // Fallback se a imagem não carregar
                           const img = e.target as HTMLImageElement;
                           img.style.display = 'none';
                           const fallback = img.nextElementSibling as HTMLElement;
-                          if (fallback) {
-                            fallback.style.display = 'flex';
-                          }
-                        }}
-                        onLoad={() => {
-                          // Garantir que o fallback está escondido quando a imagem carregar
-                          const img = document.querySelector(`img[alt="${chat.name || chat.id}"]`) as HTMLImageElement;
-                          if (img && img.nextElementSibling) {
-                            (img.nextElementSibling as HTMLElement).style.display = 'none';
-                          }
+                          if (fallback) fallback.style.display = 'flex';
                         }}
                         crossOrigin="anonymous"
                       />
                     ) : null}
                     <div
-                      className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-yellow-500/20 flex items-center justify-center text-white font-bold text-lg border-2 border-zinc-700/50 shadow-lg ring-2 ring-zinc-800/50 backdrop-blur-sm"
+                      className="relative w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center text-white font-black text-xl border border-zinc-800 shadow-2xl group-hover:border-yellow-500/50 transition-colors"
                       style={{ display: chat.profilePicUrl ? 'none' : 'flex' }}
                     >
-                      <span className="bg-gradient-to-br from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                      <span className="text-yellow-500 italic">
                         {(chat.name || chat.id).charAt(0).toUpperCase()}
                       </span>
                     </div>
+                    {chat.unreadCount > 0 && (
+                      <div className="absolute -top-1 -right-1 bg-yellow-500 text-black text-[10px] font-black px-1.5 py-0.5 rounded-lg shadow-[0_0_15px_rgba(234,179,8,0.5)] z-10 animate-bounce">
+                        {chat.unreadCount}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="font-bold text-white truncate text-base">{chat.name || chat.id}</div>
-                      <div className="text-xs text-zinc-500 font-medium">{formatTime(chat.lastTs)}</div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex justify-between items-start mb-1.5">
+                      <div className={`font-black uppercase tracking-tight truncate text-sm transition-colors ${isActive ? 'text-yellow-500' : 'text-zinc-100 group-hover:text-white'}`}>
+                        {chat.name || chat.id}
+                      </div>
+                      <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest pl-2">{formatTime(chat.lastTs)}</div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <div className="text-sm text-zinc-400 truncate">{chat.lastMessage || ''}</div>
-                      {chat.unreadCount > 0 && (
-                        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[1.5rem] text-center shadow-md">
-                          {chat.unreadCount}
-                        </div>
-                      )}
+                      <div className={`text-xs truncate transition-colors ${isActive ? 'text-zinc-400' : 'text-zinc-500 group-hover:text-zinc-400'}`}>
+                        {chat.lastMessage || 'Nenhuma mensagem'}
+                      </div>
                     </div>
 
                     {chat.tags && chat.tags.length > 0 && (
-                      <div className="flex gap-1 mt-2 flex-wrap">
+                      <div className="flex gap-1.5 mt-2.5 flex-wrap">
                         {chat.tags.slice(0, 2).map((tag, i) => {
                           const color = getTagColor(tag);
                           return (
                             <span
                               key={i}
-                              className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border"
-                              style={{ borderColor: `${color}40`, color }}
+                              className="text-[9px] px-2 py-0.5 rounded-md font-black uppercase tracking-tighter border"
+                              style={{ 
+                                backgroundColor: `${color}10`,
+                                borderColor: `${color}30`,
+                                color: color 
+                              }}
                             >
                               {tag}
                             </span>
                           );
                         })}
-                        {chat.tags.length > 2 && <span className="text-[10px] text-zinc-500">+{chat.tags.length - 2}</span>}
                       </div>
                     )}
                   </div>
