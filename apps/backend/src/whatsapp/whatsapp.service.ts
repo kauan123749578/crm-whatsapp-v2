@@ -352,12 +352,18 @@ export class WhatsAppService {
           if (!chatId) return;
 
           if (this.dbEnabled) {
+            // Garantir que a instância existe
+            await this.prisma.whatsAppInstance.upsert({
+              where: { id },
+              update: { status: runtime.status },
+              create: { id, status: runtime.status, userId: null }
+            });
+
             // Upsert chat básico - PRESERVAR tags e stage existentes
             await this.prisma.chat.upsert({
               where: { id: chatId },
               update: {
                 // Atualizar apenas campos do WhatsApp, PRESERVAR tags e stage
-                instanceId: id,
                 name: chat.name || undefined, // Atualizar nome se tiver
                 isGroup: !!chat.isGroup,
                 unreadCount: chat.unreadCount || 0,
@@ -367,7 +373,9 @@ export class WhatsAppService {
               },
               create: {
                 id: chatId,
-                instanceId: id,
+                instance: {
+                  connect: { id }
+                },
                 name: chat.name || null,
                 isGroup: !!chat.isGroup,
                 unreadCount: chat.unreadCount || 0,
@@ -574,6 +582,7 @@ export class WhatsAppService {
         return {
           id: chatId,
           name: chatName,
+          instanceId: instanceId, // Garantir que instanceId está presente
           isGroup: !!c?.isGroup,
           unreadCount: c?.unreadCount || 0,
           lastMessage: c?.lastMessage?.body || null,
@@ -618,13 +627,19 @@ export class WhatsAppService {
             inst.chatsCache = { ts: Date.now(), data: mapped };
 
             if (this.dbEnabled) {
+              // Garantir que a instância existe antes de criar chats
+              await this.prisma.whatsAppInstance.upsert({
+                where: { id: instanceId },
+                update: { status: inst.status },
+                create: { id: instanceId, status: inst.status, userId: null }
+              });
+
               await this.prisma.$transaction(
                 mapped.map((c: any) =>
                   this.prisma.chat.upsert({
                     where: { id: c.id },
                     update: {
                       // Atualizar apenas campos que mudam do WhatsApp, PRESERVAR tags, stage e nome salvo
-                      instanceId: c.instanceId,
                       // NÃO atualizar nome no upsert - nome só é atualizado quando usuário edita manualmente ou quando é criado
                       // Se já existe um nome válido no banco, preservá-lo
                       isGroup: c.isGroup,
@@ -635,7 +650,9 @@ export class WhatsAppService {
                     },
                     create: {
                       id: c.id,
-                      instanceId: c.instanceId,
+                      instance: {
+                        connect: { id: instanceId }
+                      },
                       name: c.name || null, // Salvar nome quando criar
                       isGroup: c.isGroup,
                       unreadCount: c.unreadCount,
@@ -753,7 +770,18 @@ export class WhatsAppService {
               stage: true
             }
           });
-          return dbChats.map((c) => ({
+          // Retornar chats do banco (sem profilePicUrl pois não está salvo no banco)
+          return dbChats.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            isGroup: c.isGroup,
+            unreadCount: c.unreadCount,
+            lastMessage: c.lastMessage,
+            lastTs: c.lastTs,
+            tags: c.tags || [],
+            stage: c.stage || 'Entrada',
+            profilePicUrl: null // Não temos foto no banco
+          })); dbChats.map((c) => ({
             ...c,
             tags: c.tags || [],
             stage: c.stage || 'Entrada'
@@ -809,6 +837,38 @@ export class WhatsAppService {
 
       // Persistir best-effort
       if (this.dbEnabled) {
+        // Garantir que a instância e o chat existem antes de salvar mensagens
+        await this.prisma.whatsAppInstance.upsert({
+          where: { id: instanceId },
+          update: { status: inst.status },
+          create: { id: instanceId, status: inst.status, userId: null }
+        });
+
+        // Verificar se o chat existe, se não existir, criar
+        const chatExists = await this.prisma.chat.findUnique({
+          where: { id: chatId },
+          select: { id: true }
+        });
+
+        if (!chatExists) {
+          // Criar chat básico se não existir
+          await this.prisma.chat.create({
+            data: {
+              id: chatId,
+              instance: {
+                connect: { id: instanceId }
+              },
+              name: null,
+              isGroup: false,
+              unreadCount: 0,
+              lastMessage: null,
+              lastTs: 0,
+              tags: [],
+              stage: 'Entrada'
+            }
+          });
+        }
+
         await this.prisma.$transaction(
           mapped.map((m: any) =>
             this.prisma.message.upsert({
@@ -816,8 +876,12 @@ export class WhatsAppService {
               update: {},
               create: {
                 id: m.id,
-                instanceId,
-                chatId,
+                instance: {
+                  connect: { id: instanceId }
+                },
+                chat: {
+                  connect: { id: chatId }
+                },
                 body: m.body,
                 fromMe: m.fromMe,
                 from: m.from,
