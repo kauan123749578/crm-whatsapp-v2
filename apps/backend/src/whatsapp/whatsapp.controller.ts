@@ -46,7 +46,9 @@ export class WhatsAppController {
     @Param('chatId') chatId: string,
     @Query('limit') limit?: string
   ) {
-    const n = Number.parseInt(limit || '50', 10);
+    const n = Number.parseInt(limit || '1000', 10);
+    // Limitar a 1000 mensagens por vez para evitar timeout
+    const finalLimit = Number.isFinite(n) && n > 0 && n <= 1000 ? n : 1000;
     // Se ainda não existe, retorna 503 (evita 500 no log e a UI pode retry depois)
     const inst = this.wa.getInstance(instanceId);
     if (!inst) {
@@ -56,7 +58,7 @@ export class WhatsAppController {
       );
     }
     try {
-      return await this.wa.getMessages(instanceId, decodeURIComponent(chatId), Number.isFinite(n) ? n : 50);
+      return await this.wa.getMessages(instanceId, decodeURIComponent(chatId), finalLimit);
     } catch (e: any) {
       const msg = String(e?.message || '');
       if (/timed out|protocolTimeout|detached Frame|Target closed|Protocol error|Execution context/i.test(msg)) {

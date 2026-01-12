@@ -79,14 +79,14 @@ export default function ChatWindow({ chatName, messages, onSendMessage, isLoadin
 
   return (
     <div className="flex-1 flex flex-col h-full bg-zinc-950 relative">
-      <div className="h-16 px-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-900">
+      <div className="h-16 px-6 border-b border-zinc-800/50 flex items-center justify-between bg-zinc-900/80 backdrop-blur-sm shadow-md">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-600 flex items-center justify-center text-white font-bold">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-zinc-700 via-zinc-600 to-zinc-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
             {chatName.charAt(0).toUpperCase()}
           </div>
           <div>
             <h3 className="text-white font-bold text-lg leading-none">{chatName}</h3>
-            <span className="text-zinc-500 text-xs">WhatsApp</span>
+            <span className="text-zinc-500 text-xs font-medium">WhatsApp</span>
           </div>
         </div>
         <div className="flex items-center gap-4 text-zinc-400">
@@ -192,22 +192,22 @@ export default function ChatWindow({ chatName, messages, onSendMessage, isLoadin
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-zinc-900 border-t border-zinc-800">
+      <div className="p-5 bg-zinc-900/80 backdrop-blur-sm border-t border-zinc-800/50 shadow-lg">
         {selectedFile && (
-          <div className="mb-2 p-2 bg-zinc-800 rounded-lg flex items-center justify-between text-sm">
-            <span className="text-zinc-300 truncate flex-1">{selectedFile.name}</span>
+          <div className="mb-3 p-3 bg-zinc-800/80 rounded-xl flex items-center justify-between text-sm border border-zinc-700 shadow-md">
+            <span className="text-zinc-300 truncate flex-1 font-medium">{selectedFile.name}</span>
             <button
               onClick={() => {
                 setSelectedFile(null);
                 if (fileInputRef.current) fileInputRef.current.value = '';
               }}
-              className="ml-2 text-zinc-500 hover:text-white"
+              className="ml-2 text-zinc-500 hover:text-white transition-colors"
             >
               ✕
             </button>
           </div>
         )}
-        <div className="bg-zinc-950 rounded-2xl flex items-end p-2 border border-zinc-800 focus-within:border-yellow-400 transition-colors">
+        <div className="bg-zinc-950/80 rounded-2xl flex items-end p-3 border border-zinc-800/50 focus-within:border-yellow-400 focus-within:ring-2 focus-within:ring-yellow-400/20 transition-all duration-200 shadow-lg">
           <button
             onClick={() => fileInputRef.current?.click()}
             className="p-3 text-zinc-400 hover:text-white transition-colors"

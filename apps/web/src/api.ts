@@ -7,6 +7,7 @@ export type Chat = {
   lastTs: number;
   tags?: string[];
   stage?: string;
+  profilePicUrl?: string | null;
 };
 
 export type Message = {

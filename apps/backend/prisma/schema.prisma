@@ -17,7 +17,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  chats Chat[] // Chats que o usuário é responsável
+  chats            Chat[]             // Chats que o usuário é responsável
+  whatsappInstances WhatsAppInstance[] // Instâncias WhatsApp que o funcionário gerencia
 
   @@map("users")
 }
@@ -25,11 +26,15 @@ model User {
 model WhatsAppInstance {
   id        String   @id
   status    String   @default("idle")
+  userId    String?  // Funcionário responsável por esta instância (null = sem responsável)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   chats     Chat[]
   messages  Message[]
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }
 
 model Chat {

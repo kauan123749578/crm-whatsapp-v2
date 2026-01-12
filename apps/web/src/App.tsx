@@ -176,8 +176,8 @@ export default function App() {
   const loadMsgs = async (chatId: string) => {
     setLoadingMsgs(true);
     try {
-      // Carregar mais mensagens (500 para garantir que carrega todas)
-      const data = await fetchMessages(instanceId, chatId, 500);
+      // Carregar mais mensagens (1000 para garantir que carrega todas)
+      const data = await fetchMessages(instanceId, chatId, 1000);
       setMessages(data);
       messagesRef.current = data; // Atualizar ref
       // Salvar no cache
@@ -185,6 +185,7 @@ export default function App() {
         instanceCacheRef.current[instanceId] = { chats: [], messages: {}, selectedChatId: null };
       }
       instanceCacheRef.current[instanceId].messages[chatId] = data;
+      return data;
     } finally {
       setLoadingMsgs(false);
     }
@@ -378,27 +379,34 @@ export default function App() {
     // setShowRightSidebar(false);
     setShowMetrics(false);
     
-    // Restaurar estado do cache da nova instância
+    // Restaurar estado do cache da nova instância IMEDIATAMENTE (sem delay)
     const cached = instanceCacheRef.current[activeChannel];
     if (cached && cached.chats.length > 0) {
-      // Restaurar chats
+      // Restaurar chats IMEDIATAMENTE
       setChats(cached.chats);
       chatsRef.current = cached.chats;
       
-      // Restaurar chat selecionado e mensagens
+      // Restaurar chat selecionado e mensagens IMEDIATAMENTE
       if (cached.selectedChatId) {
         setSelectedChatId(cached.selectedChatId);
         selectedChatIdRef.current = cached.selectedChatId;
         
-        // Restaurar mensagens do cache se existirem
+        // Restaurar mensagens do cache IMEDIATAMENTE se existirem
         if (cached.messages[cached.selectedChatId] && cached.messages[cached.selectedChatId].length > 0) {
           setMessages(cached.messages[cached.selectedChatId]);
           messagesRef.current = cached.messages[cached.selectedChatId];
+          // Carregar novas mensagens em background (sem bloquear UI)
+          void loadMsgs(cached.selectedChatId).then((newMessages) => {
+            // Atualizar apenas se houver novas mensagens
+            if (newMessages && newMessages.length > cached.messages[cached.selectedChatId].length) {
+              setMessages(newMessages);
+              messagesRef.current = newMessages;
+              instanceCacheRef.current[activeChannel].messages[cached.selectedChatId] = newMessages;
+            }
+          });
         } else {
           // Se não tem no cache, carregar do servidor
-          setTimeout(() => {
-            void loadMsgs(cached.selectedChatId);
-          }, 100);
+          void loadMsgs(cached.selectedChatId);
         }
       } else if (cached.chats.length > 0) {
         // Selecionar primeiro chat se não tiver selecionado
@@ -408,10 +416,16 @@ export default function App() {
         if (cached.messages[firstChatId] && cached.messages[firstChatId].length > 0) {
           setMessages(cached.messages[firstChatId]);
           messagesRef.current = cached.messages[firstChatId];
+          // Carregar novas em background
+          void loadMsgs(firstChatId).then((newMessages) => {
+            if (newMessages && newMessages.length > cached.messages[firstChatId].length) {
+              setMessages(newMessages);
+              messagesRef.current = newMessages;
+              instanceCacheRef.current[activeChannel].messages[firstChatId] = newMessages;
+            }
+          });
         } else {
-          setTimeout(() => {
-            void loadMsgs(firstChatId);
-          }, 100);
+          void loadMsgs(firstChatId);
         }
       } else {
         setMessages([]);
@@ -550,17 +564,17 @@ export default function App() {
             : 'bg-zinc-500';
 
   return (
-    <div className="h-full bg-zinc-950 text-zinc-100 flex">
+    <div className="h-full bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-100 flex">
       <ChannelSwitcher activeChannel={activeChannel} onSelectChannel={setActiveChannel} />
 
       <div className="flex-1 flex flex-col">
-        <div className="h-14 flex items-center justify-between px-4 border-b border-zinc-800 bg-zinc-900">
-          <div className="flex items-center gap-3">
-            <div className={`w-2.5 h-2.5 rounded-full ${statusColor}`} />
+        <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-800/50 bg-zinc-900/80 backdrop-blur-sm shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className={`w-3 h-3 rounded-full ${statusColor} shadow-lg ${statusColor === 'bg-green-500' ? 'animate-pulse' : ''}`} />
             {user?.role === 'admin' && (
               <button
                 onClick={() => setShowMetrics(!showMetrics)}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-sm text-white transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-zinc-800 to-zinc-700 hover:from-zinc-700 hover:to-zinc-600 border border-zinc-700 rounded-lg text-sm text-white transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -568,36 +582,46 @@ export default function App() {
                 Métricas
               </button>
             )}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <div className="font-semibold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                CRM WhatsApp v2
+              <div className="font-bold text-lg bg-gradient-to-r from-yellow-400 via-orange-400 to-orange-500 bg-clip-text text-transparent">
+                CRM WhatsApp
               </div>
             </div>
-            <div className="text-xs text-zinc-400">{status.message || status.status}</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="text-sm text-zinc-400">
-              {user.name} <span className="text-zinc-500">({user.role === 'admin' ? 'Admin' : 'Funcionário'})</span>
+            <div className="text-xs text-zinc-400 bg-zinc-800/50 px-3 py-1 rounded-full border border-zinc-700">
+              {status.message || status.status}
             </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-zinc-300 bg-zinc-800/50 px-4 py-2 rounded-lg border border-zinc-700">
+              <span className="font-medium">{user.name}</span> <span className="text-zinc-500">({user.role === 'admin' ? 'Admin' : 'Funcionário'})</span>
+            </div>
+            {user?.role === 'employee' && (
+              <button
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-4 py-2 rounded-lg text-sm font-semibold hover:from-yellow-300 hover:to-orange-400 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={connect}
+                disabled={status.status === 'connecting' || status.status === 'qr'}
+              >
+                {status.status === 'connecting' || status.status === 'qr' ? 'Conectando...' : 'Conectar'}
+              </button>
+            )}
+            {user?.role === 'admin' && (
+              <div className="text-xs text-zinc-500 bg-zinc-800/50 px-3 py-2 rounded-lg border border-zinc-700">
+                Modo Visualização
+              </div>
+            )}
             <button
-              className="bg-yellow-400 text-black px-3 py-1.5 rounded text-sm font-semibold hover:bg-yellow-300"
-              onClick={connect}
-            >
-              Conectar
-            </button>
-            <button
-              className="bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded text-sm hover:bg-zinc-700"
+              className="bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-lg text-sm transition-all duration-200 shadow-md hover:shadow-lg"
               onClick={() => void loadChats(instanceId, true)}
             >
-              Atualizar chats
+              Atualizar
             </button>
             <button
-              className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700"
+              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg"
               onClick={handleLogout}
             >
               Sair
@@ -668,4 +692,5 @@ export default function App() {
       </div>
     </div>
   );
+}
 }

@@ -54,37 +54,51 @@ export default function ChatList({ chats, activeChatId, onSelectChat, isLoading,
   const getTagColor = (tag: string) => TAG_COLORS[tag] || '#9CA3AF';
 
   return (
-    <div className="w-[350px] bg-zinc-900 border-r border-zinc-800 flex flex-col h-full">
-      <div className="p-4 border-b border-zinc-800">
-        <h2 className="text-xl font-bold text-white mb-3">Mensagens</h2>
+    <div className="w-[380px] bg-zinc-900/50 backdrop-blur-sm border-r border-zinc-800/50 flex flex-col h-full shadow-xl">
+      <div className="p-5 border-b border-zinc-800/50 bg-zinc-900/80">
+        <h2 className="text-2xl font-bold text-white mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Mensagens</h2>
         <div className="relative">
           <input
             type="text"
             placeholder="Buscar contatos..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-zinc-950 text-white pl-8 pr-4 py-2 rounded-lg border border-zinc-800 focus:border-yellow-400 focus:outline-none text-sm"
+            className="w-full bg-zinc-950/80 text-white pl-10 pr-4 py-3 rounded-xl border border-zinc-800 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 text-sm transition-all duration-200"
           />
-          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500">🔍</span>
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
       </div>
 
-      <div className="px-4 py-2 flex gap-2 text-sm border-b border-zinc-800">
+      <div className="px-5 py-3 flex gap-2 text-sm border-b border-zinc-800/50 bg-zinc-900/50">
         <button
           onClick={() => setFilter('all')}
-          className={`px-3 py-1 rounded ${filter === 'all' ? 'bg-yellow-400 text-black font-medium' : 'text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            filter === 'all' 
+              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-md' 
+              : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+          }`}
         >
           Todos
         </button>
         <button
           onClick={() => setFilter('unread')}
-          className={`px-3 py-1 rounded ${filter === 'unread' ? 'bg-yellow-400 text-black font-medium' : 'text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            filter === 'unread' 
+              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-md' 
+              : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+          }`}
         >
           Não lidos
         </button>
         <button
           onClick={() => setFilter('groups')}
-          className={`px-3 py-1 rounded ${filter === 'groups' ? 'bg-yellow-400 text-black font-medium' : 'text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            filter === 'groups' 
+              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-md' 
+              : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+          }`}
         >
           Grupos
         </button>
@@ -113,26 +127,45 @@ export default function ChatList({ chats, activeChatId, onSelectChat, isLoading,
                 key={chat.id}
                 onClick={() => onSelectChat(chat.id)}
                 className={`
-                  px-4 py-4 cursor-pointer transition-colors border-b border-zinc-800
-                  ${isActive ? 'bg-zinc-800 border-l-2 border-l-yellow-400' : 'hover:bg-zinc-800/50 border-l-2 border-l-transparent'}
+                  px-5 py-4 cursor-pointer transition-all duration-200 border-b border-zinc-800/30
+                  ${isActive 
+                    ? 'bg-gradient-to-r from-zinc-800/80 to-zinc-800/50 border-l-4 border-l-yellow-400 shadow-lg' 
+                    : 'hover:bg-zinc-800/30 border-l-4 border-l-transparent hover:border-l-yellow-400/30'
+                  }
                 `}
               >
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center text-white font-bold">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 relative">
+                    {chat.profilePicUrl ? (
+                      <img
+                        src={chat.profilePicUrl}
+                        alt={chat.name || chat.id}
+                        className="w-14 h-14 rounded-full object-cover border-2 border-zinc-700 shadow-md"
+                        onError={(e) => {
+                          // Fallback se a imagem não carregar
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-14 h-14 rounded-full bg-gradient-to-br from-zinc-700 via-zinc-600 to-zinc-700 flex items-center justify-center text-white font-bold text-lg border-2 border-zinc-700 shadow-md"
+                      style={{ display: chat.profilePicUrl ? 'none' : 'flex' }}
+                    >
                       {(chat.name || chat.id).charAt(0).toUpperCase()}
                     </div>
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start mb-1">
-                      <div className="font-semibold text-white truncate">{chat.name || chat.id}</div>
-                      <div className="text-xs text-zinc-500">{formatTime(chat.lastTs)}</div>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="font-bold text-white truncate text-base">{chat.name || chat.id}</div>
+                      <div className="text-xs text-zinc-500 font-medium">{formatTime(chat.lastTs)}</div>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-zinc-400 truncate">{chat.lastMessage || ''}</div>
                       {chat.unreadCount > 0 && (
-                        <div className="bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
+                        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[1.5rem] text-center shadow-md">
                           {chat.unreadCount}
                         </div>
                       )}

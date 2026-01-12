@@ -302,7 +302,7 @@ export class WhatsAppService {
         await this.prisma.whatsAppInstance.upsert({
           where: { id },
           update: { status: runtime.status },
-          create: { id, status: runtime.status }
+          create: { id, status: runtime.status, userId: null } // userId será definido quando funcionário conectar
         });
       }
 
@@ -561,6 +561,16 @@ export class WhatsAppService {
           chatName = idPart.length <= 20 ? idPart : `${idPart.substring(0, 17)}...`;
         }
 
+        // Buscar foto de perfil do chat
+        let profilePicUrl: string | null = null;
+        try {
+          if (!c?.isGroup) {
+            profilePicUrl = await c.getProfilePicUrl().catch(() => null);
+          }
+        } catch {
+          // Ignorar erro ao buscar foto
+        }
+
         return {
           id: chatId,
           name: chatName,
@@ -569,7 +579,8 @@ export class WhatsAppService {
           lastMessage: c?.lastMessage?.body || null,
           lastTs: c?.lastMessage?.timestamp || 0,
           tags: dbChat?.tags || [],
-          stage: dbChat?.stage || 'Entrada'
+          stage: dbChat?.stage || 'Entrada',
+          profilePicUrl
         };
       };
 
