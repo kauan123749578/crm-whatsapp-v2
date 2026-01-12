@@ -435,6 +435,7 @@ export class WhatsAppService {
           // Buscar tags e stage do banco para incluir no evento
           let tags: string[] = [];
           let stage = 'Entrada';
+          let profilePicUrl: string | null = null;
           if (this.dbEnabled) {
             try {
               const dbChat = await this.prisma.chat.findUnique({
@@ -444,6 +445,14 @@ export class WhatsAppService {
               if (dbChat) {
                 tags = dbChat.tags || [];
                 stage = dbChat.stage || 'Entrada';
+              }
+              // Buscar foto de perfil do chat
+              try {
+                if (!chat.isGroup) {
+                  profilePicUrl = await chat.getProfilePicUrl().catch(() => null);
+                }
+              } catch {
+                // Ignorar erro ao buscar foto
               }
             } catch (e) {
               // Ignore se falhar
@@ -461,7 +470,8 @@ export class WhatsAppService {
               lastMessage: msg.body || null,
               lastTs: msg.timestamp || 0,
               tags, // Incluir tags do banco
-              stage // Incluir stage do banco
+              stage, // Incluir stage do banco
+              profilePicUrl // Incluir foto de perfil
             }
           });
         } catch (e) {

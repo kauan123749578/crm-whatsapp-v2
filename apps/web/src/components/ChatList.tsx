@@ -140,20 +140,33 @@ export default function ChatList({ chats, activeChatId, onSelectChat, isLoading,
                       <img
                         src={chat.profilePicUrl}
                         alt={chat.name || chat.id}
-                        className="w-14 h-14 rounded-full object-cover border-2 border-zinc-700 shadow-md"
+                        className="w-14 h-14 rounded-full object-cover border-2 border-zinc-700/50 shadow-lg ring-2 ring-zinc-800/50"
                         onError={(e) => {
                           // Fallback se a imagem não carregar
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
+                          const img = e.target as HTMLImageElement;
+                          img.style.display = 'none';
+                          const fallback = img.nextElementSibling as HTMLElement;
+                          if (fallback) {
+                            fallback.style.display = 'flex';
+                          }
                         }}
+                        onLoad={() => {
+                          // Garantir que o fallback está escondido quando a imagem carregar
+                          const img = document.querySelector(`img[alt="${chat.name || chat.id}"]`) as HTMLImageElement;
+                          if (img && img.nextElementSibling) {
+                            (img.nextElementSibling as HTMLElement).style.display = 'none';
+                          }
+                        }}
+                        crossOrigin="anonymous"
                       />
                     ) : null}
                     <div
-                      className="w-14 h-14 rounded-full bg-gradient-to-br from-zinc-700 via-zinc-600 to-zinc-700 flex items-center justify-center text-white font-bold text-lg border-2 border-zinc-700 shadow-md"
+                      className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-yellow-500/20 flex items-center justify-center text-white font-bold text-lg border-2 border-zinc-700/50 shadow-lg ring-2 ring-zinc-800/50 backdrop-blur-sm"
                       style={{ display: chat.profilePicUrl ? 'none' : 'flex' }}
                     >
-                      {(chat.name || chat.id).charAt(0).toUpperCase()}
+                      <span className="bg-gradient-to-br from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                        {(chat.name || chat.id).charAt(0).toUpperCase()}
+                      </span>
                     </div>
                   </div>
 

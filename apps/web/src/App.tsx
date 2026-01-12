@@ -296,7 +296,9 @@ export default function App() {
               tags: Array.isArray(p.chat.tags) && p.chat.tags.length > 0 ? p.chat.tags : (existing.tags || []),
               stage: p.chat.stage || existing.stage || 'Entrada',
               // PRESERVAR nome - só atualizar se o novo for válido e diferente de ID
-              name: shouldKeepExistingName ? existing.name : newName
+              name: shouldKeepExistingName ? existing.name : newName,
+              // PRESERVAR profilePicUrl - só atualizar se vier um novo válido
+              profilePicUrl: p.chat.profilePicUrl || existing.profilePicUrl || null
             };
             // Mover para o topo (última mensagem)
             const [moved] = updated.splice(existingIndex, 1);
@@ -315,7 +317,8 @@ export default function App() {
               ...p.chat,
               name: chatName,
               tags: Array.isArray(p.chat.tags) ? p.chat.tags : [],
-              stage: p.chat.stage || 'Entrada'
+              stage: p.chat.stage || 'Entrada',
+              profilePicUrl: p.chat.profilePicUrl || null
             }, ...prev];
           }
           
@@ -568,13 +571,16 @@ export default function App() {
       <ChannelSwitcher activeChannel={activeChannel} onSelectChannel={setActiveChannel} />
 
       <div className="flex-1 flex flex-col">
-        <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-800/50 bg-zinc-900/80 backdrop-blur-sm shadow-lg">
+        <div className="h-18 flex items-center justify-between px-6 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 backdrop-blur-xl shadow-xl">
           <div className="flex items-center gap-4">
-            <div className={`w-3 h-3 rounded-full ${statusColor} shadow-lg ${statusColor === 'bg-green-500' ? 'animate-pulse' : ''}`} />
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${statusColor} shadow-lg ${statusColor === 'bg-green-500' ? 'animate-pulse' : ''}`} />
+              <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">{status.status}</span>
+            </div>
             {user?.role === 'admin' && (
               <button
                 onClick={() => setShowMetrics(!showMetrics)}
-                className="px-4 py-2 bg-gradient-to-r from-zinc-800 to-zinc-700 hover:from-zinc-700 hover:to-zinc-600 border border-zinc-700 rounded-lg text-sm text-white transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+                className="px-4 py-2 bg-gradient-to-r from-zinc-800/80 to-zinc-700/80 hover:from-zinc-700/90 hover:to-zinc-600/90 border border-zinc-700/50 rounded-xl text-sm text-white transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -582,40 +588,50 @@ export default function App() {
                 Métricas
               </button>
             )}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+            <div className="flex items-center gap-3 pl-4 border-l border-zinc-800/50">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-xl blur opacity-50"></div>
+                <div className="relative w-12 h-12 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-xl">
+                  <svg className="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
               </div>
-              <div className="font-bold text-lg bg-gradient-to-r from-yellow-400 via-orange-400 to-orange-500 bg-clip-text text-transparent">
-                CRM WhatsApp
+              <div className="font-extrabold text-xl bg-gradient-to-r from-yellow-400 via-orange-400 to-orange-500 bg-clip-text text-transparent tracking-tight">
+                CRM WhatsApp v2
               </div>
-            </div>
-            <div className="text-xs text-zinc-400 bg-zinc-800/50 px-3 py-1 rounded-full border border-zinc-700">
-              {status.message || status.status}
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-sm text-zinc-300 bg-zinc-800/50 px-4 py-2 rounded-lg border border-zinc-700">
-              <span className="font-medium">{user.name}</span> <span className="text-zinc-500">({user.role === 'admin' ? 'Admin' : 'Funcionário'})</span>
+            <div className="text-sm text-zinc-200 bg-zinc-800/60 px-4 py-2 rounded-xl border border-zinc-700/50 backdrop-blur-sm shadow-lg">
+              <span className="font-semibold">{user.name}</span> <span className="text-zinc-400">({user.role === 'admin' ? 'Admin' : 'Funcionário'})</span>
             </div>
             {user?.role === 'employee' && (
               <button
-                className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-4 py-2 rounded-lg text-sm font-semibold hover:from-yellow-300 hover:to-orange-400 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:from-yellow-300 hover:to-orange-400 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 onClick={connect}
                 disabled={status.status === 'connecting' || status.status === 'qr'}
               >
-                {status.status === 'connecting' || status.status === 'qr' ? 'Conectando...' : 'Conectar'}
+                {status.status === 'connecting' || status.status === 'qr' ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Conectando...
+                  </span>
+                ) : (
+                  'Conectar'
+                )}
               </button>
             )}
             {user?.role === 'admin' && (
-              <div className="text-xs text-zinc-500 bg-zinc-800/50 px-3 py-2 rounded-lg border border-zinc-700">
+              <div className="text-xs text-zinc-400 bg-zinc-800/60 px-4 py-2 rounded-xl border border-zinc-700/50 backdrop-blur-sm">
                 Modo Visualização
               </div>
             )}
             <button
-              className="bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-lg text-sm transition-all duration-200 shadow-md hover:shadow-lg"
+              className="bg-zinc-800/80 hover:bg-zinc-700/90 border border-zinc-700/50 px-4 py-2 rounded-xl text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
               onClick={() => void loadChats(instanceId, true)}
             >
               Atualizar
@@ -651,6 +667,7 @@ export default function App() {
               isLoading={loadingMsgs}
               onToggleSidebar={() => setShowRightSidebar(!showRightSidebar)}
               showSidebar={showRightSidebar}
+              profilePicUrl={selectedChat?.profilePicUrl || null}
             />
 
             {showRightSidebar && selectedChat && user && (

@@ -96,37 +96,46 @@ export default function RightSidebar({ chat, instanceId, onClose, onUpdateTags, 
   };
 
   return (
-    <div className="w-[300px] bg-zinc-900 border-l border-zinc-800 flex flex-col h-full overflow-y-auto">
-      <div className="flex justify-between items-center p-5 border-b border-zinc-800">
-        <h2 className="font-bold text-white">Info do Contato</h2>
-        <button onClick={onClose} className="text-zinc-400 hover:text-white text-xl">
+    <div className="w-[320px] bg-zinc-900/95 backdrop-blur-xl border-l border-zinc-800/50 flex flex-col h-full overflow-y-auto shadow-2xl">
+      <div className="flex justify-between items-center p-5 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-900/80 to-zinc-900/60">
+        <h2 className="font-bold text-white text-lg">Info do Contato</h2>
+        <button onClick={onClose} className="text-zinc-400 hover:text-white text-2xl transition-colors hover:bg-zinc-800/50 rounded-lg w-8 h-8 flex items-center justify-center">
           ×
         </button>
       </div>
 
-      <div className="p-6 flex flex-col items-center border-b border-zinc-800">
+      <div className="p-6 flex flex-col items-center border-b border-zinc-800/50 bg-gradient-to-b from-zinc-900/50 to-transparent">
         {loadingContact ? (
-          <div className="w-24 h-24 rounded-full bg-zinc-800 animate-pulse mb-4" />
-        ) : contactInfo?.profilePicUrl ? (
+          <div className="w-28 h-28 rounded-full bg-zinc-800 animate-pulse mb-4 border-2 border-zinc-700/50" />
+        ) : (contactInfo?.profilePicUrl || chat.profilePicUrl) ? (
           <img
-            src={contactInfo.profilePicUrl}
-            alt={contactInfo.name || 'Contato'}
-            className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-zinc-700"
+            src={contactInfo?.profilePicUrl || chat.profilePicUrl || ''}
+            alt={contactInfo?.name || chat.name || 'Contato'}
+            className="w-28 h-28 rounded-full object-cover mb-4 border-2 border-zinc-700/50 shadow-xl ring-2 ring-zinc-800/50"
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+              const img = e.target as HTMLImageElement;
+              img.style.display = 'none';
+              const fallback = img.nextElementSibling as HTMLElement;
+              if (fallback) {
+                fallback.style.display = 'flex';
+              }
             }}
+            crossOrigin="anonymous"
           />
         ) : null}
-        <div className={`w-24 h-24 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-600 flex items-center justify-center text-3xl font-bold text-white mb-4 ${contactInfo?.profilePicUrl ? 'hidden' : ''}`}>
-          {(contactInfo?.name || chat.name || chat.id).charAt(0).toUpperCase()}
+        <div 
+          className={`w-28 h-28 rounded-full bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-yellow-500/20 flex items-center justify-center text-4xl font-bold mb-4 border-2 border-zinc-700/50 shadow-xl ring-2 ring-zinc-800/50 backdrop-blur-sm ${(contactInfo?.profilePicUrl || chat.profilePicUrl) ? 'hidden' : 'flex'}`}
+        >
+          <span className="bg-gradient-to-br from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+            {(contactInfo?.name || chat.name || chat.id).charAt(0).toUpperCase()}
+          </span>
         </div>
         <h3 className="text-xl font-bold text-white mb-1">{contactInfo?.name || chat.name || chat.id}</h3>
         {contactInfo?.number && (
-          <span className="text-zinc-400 text-sm mb-1">{contactInfo.number}</span>
+          <span className="text-zinc-400 text-sm mb-1 font-mono">{contactInfo.number}</span>
         )}
         {contactInfo?.isBusiness && (
-          <span className="text-xs bg-blue-950 text-blue-300 px-2 py-1 rounded mt-1">Negócio</span>
+          <span className="text-xs bg-blue-950/60 text-blue-300 px-3 py-1 rounded-full mt-2 border border-blue-800/50">Negócio</span>
         )}
       </div>
 
