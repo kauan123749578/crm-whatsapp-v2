@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "antigravity-crm",
   "private": true,
   "version": "0.0.0",
@@ -34,5 +35,21 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "vite": "^5.4.11"
+=======
+  "name": "crm-v2",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @crm/backend",
+    "build": "npm run clean && npm run build -w @crm/web && node tools/copy-web-dist.mjs && npm run prisma:generate -w @crm/backend && npm run build -w @crm/backend",
+    "clean": "rm -rf apps/web/dist apps/backend/public apps/backend/dist || true",
+    "start": "npm run prisma:generate -w @crm/backend && npm run db:push -w @crm/backend && npm run db:init -w @crm/backend && node apps/backend/dist/main.js",
+    "copy:web": "node tools/copy-web-dist.mjs",
+    "db:push": "npm run prisma:generate -w @crm/backend && npm run prisma:push -w @crm/backend",
+    "db:migrate": "npm run prisma:generate -w @crm/backend && npm run prisma:migrate -w @crm/backend",
+    "db:init": "npm run db:init -w @crm/backend"
+>>>>>>> c431a5388190dd756834ce49f77a3eb2e5632fd1
   }
 }
