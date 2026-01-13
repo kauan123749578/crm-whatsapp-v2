@@ -34,7 +34,7 @@ async function bootstrap() {
   const port = Number.parseInt(rawPort || '8080', 10);
   await app.listen(port, '0.0.0.0');
   // eslint-disable-next-line no-console
-  console.log(`🚀 CRM v2 backend em http://0.0.0.0:${port}`);
+  console.log(`🚀 JOÃO FORNECEDOR operando em http://0.0.0.0:${port}`);
   // eslint-disable-next-line no-console
   console.log(`📊 DATABASE_URL: ${process.env.DATABASE_URL ? 'Configurado' : 'Não configurado'}`);
 }

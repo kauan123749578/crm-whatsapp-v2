@@ -59,11 +59,11 @@ export default function Login({ onLogin }: Props) {
                 </svg>
               </div>
             </div>
-            <h1 className="text-4xl font-black tracking-tighter text-white mb-2 uppercase italic">
+            <h1 className="text-5xl font-black tracking-tighter text-white mb-2 uppercase italic drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
               JOÃO <span className="text-yellow-500">FORNECEDOR</span>
             </h1>
-            <div className="h-1 w-20 bg-yellow-500 mx-auto rounded-full mb-4"></div>
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.3em]">Sistema de Gestão VIP</p>
+            <div className="h-1.5 w-32 bg-yellow-500 mx-auto rounded-full mb-6 shadow-[0_0_15px_rgba(234,179,8,0.5)]"></div>
+            <p className="text-yellow-500/60 text-[10px] font-black uppercase tracking-[0.5em] mb-4">BLACK & GOLD EDITION</p>
           </div>
 
           {error && (

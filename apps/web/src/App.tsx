@@ -601,10 +601,10 @@ export default function App() {
                 </div>
               </div>
               <div className="flex flex-col">
-                <div className="font-black text-2xl text-white tracking-tighter leading-none italic uppercase">
+                <div className="font-black text-3xl text-white tracking-tighter leading-none italic uppercase">
                   JOÃO <span className="text-yellow-500">FORNECEDOR</span>
                 </div>
-                <div className="text-[10px] text-zinc-600 font-black tracking-[0.3em] uppercase mt-1 italic">Gestão VIP de Contatos</div>
+                <div className="text-[11px] text-yellow-500/50 font-black tracking-[0.4em] uppercase mt-1.5 italic">EXCLUSIVO PARA PARCEIROS</div>
               </div>
             </div>
           </div>
