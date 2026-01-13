@@ -15,5 +15,3 @@
     "db:init": "npm run db:init -w @crm/backend"
   }
 }
-
-

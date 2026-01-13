@@ -5,7 +5,13 @@ nixPkgs = ["nodejs_20", "chromium"]
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = [
+  "npm run clean",
+  "npm run build -w @crm/web",
+  "node tools/copy-web-dist.mjs",
+  "npm run prisma:generate -w @crm/backend",
+  "npm run build -w @crm/backend"
+]
 
 [start]
 cmd = "npm start"
