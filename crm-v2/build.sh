@@ -17,4 +17,5 @@ echo "🏗️ Construindo backend..."
 npm run build -w @crm/backend
 
 echo "✅ Build completo!"
+echo "🚀 Versão: João Fornecedor - $(date +%Y%m%d-%H%M%S)"
 
