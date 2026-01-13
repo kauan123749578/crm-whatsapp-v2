@@ -1,41 +1,4 @@
 {
-<<<<<<< HEAD
-  "name": "antigravity-crm",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "start": "serve -s dist -l $PORT",
-    "start:custom": "node serve.js",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "lucide-react": "^0.562.0",
-    "qrcode": "^1.5.4",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "serve": "^14.2.1",
-    "socket.io-client": "^4.8.3"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@tailwindcss/vite": "^4.1.18",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^3.5.0",
-    "autoprefixer": "^10.4.23",
-    "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18",
-    "vite": "^5.4.11"
-=======
   "name": "crm-v2",
   "private": true,
   "workspaces": [
@@ -50,6 +13,5 @@
     "db:push": "npm run prisma:generate -w @crm/backend && npm run prisma:push -w @crm/backend",
     "db:migrate": "npm run prisma:generate -w @crm/backend && npm run prisma:migrate -w @crm/backend",
     "db:init": "npm run db:init -w @crm/backend"
->>>>>>> c431a5388190dd756834ce49f77a3eb2e5632fd1
   }
 }
