@@ -1,70 +1,3 @@
-<<<<<<< HEAD
-# Dependencies
-node_modules/
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-
-# Production builds (mantemos apenas o source)
-/dist
-/build
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env*.local
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
-
-# Editor directories and files
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.DS_Store
-
-# Railway
-.railway/
-
-# WhatsApp session data (não commitar autenticação)
-.wwebjs_auth/
-**/.wwebjs_auth/
-
-# Prisma generated files (será gerado no build)
-# Mantemos o schema, mas não os arquivos gerados localmente
-
-# Cache
-.cache/
-*.cache
-
-# Temporary files
-*.tmp
-*.temp
-*.log
-
-# OS files
-Thumbs.db
-desktop.ini
-
-# Compiled TypeScript (será gerado no build)
-apps/backend/dist/
-apps/web/dist/
-
-# Mas mantemos os arquivos compilados que já estão em apps/backend/public (precisam estar no repo)
-=======
 # Dependencies
 node_modules/
 /.pnp
@@ -123,5 +56,3 @@ Thumbs.db
 desktop.ini
 
 # Mas MANTEMOS os arquivos compilados em apps/backend/public/ (precisam estar no repo para servir o frontend)
-
->>>>>>> c431a5388190dd756834ce49f77a3eb2e5632fd1
