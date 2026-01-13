@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-main: #121212;
+  --color-bg-secondary: #1E1E1E;
+  --color-bg-sidebar: #000000;
+  --color-accent: #FFD700;
+  
+  --font-display: "Inter", "Roboto", sans-serif;
+  --font-body: "Inter", "Roboto", sans-serif;
+}
+
+body {
+  background-color: var(--color-bg-main);
+  color: #E5E5E5;
+  font-family: var(--font-body);
+}
+
+/* Scrollbar customization for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-main); 
+}
+::-webkit-scrollbar-thumb {
+  background: #333; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}

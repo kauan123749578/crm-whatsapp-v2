@@ -1,0 +1,17 @@
+ARQUIVOS PARA FAZER COMMIT AGORA:
+
+1. railway-frontend.json (já fez, mas verifique se tem buildCommand)
+2. backend/server.js
+3. backend/services/whatsappService.js
+4. src/components/QRCodeViewer.jsx
+5. src/components/SettingsView.jsx
+
+COMANDO:
+git add railway-frontend.json backend/server.js backend/services/whatsappService.js src/components/QRCodeViewer.jsx src/components/SettingsView.jsx
+git commit -m "fix: corrige build, CORS, QR Code e porta"
+git push origin main
+
+
+
+
+
