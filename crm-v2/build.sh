@@ -19,3 +19,12 @@ npm run build -w @crm/backend
 echo "✅ Build completo!"
 echo "🚀 Versão: João Fornecedor - $(date +%Y%m%d-%H%M%S)"
 
+# Verificar se o frontend foi copiado
+if [ -d "apps/backend/public" ] && [ "$(ls -A apps/backend/public)" ]; then
+  echo "✅ Frontend copiado com sucesso para apps/backend/public"
+  ls -la apps/backend/public/ | head -10
+else
+  echo "❌ ERRO: Frontend não foi copiado!"
+  exit 1
+fi
+
