@@ -39,7 +39,9 @@ async function initDb() {
       return;
     }
 
-    console.log('🌱 Criando usuário admin...');
+    console.log('🌱 Criando usuários...');
+    
+    // Criar admin
     const adminPassword = await bcrypt.hash('admin123', 10);
     const admin = await prisma.user.upsert({
       where: { username: 'admin' },
@@ -53,7 +55,43 @@ async function initDb() {
       }
     });
     console.log('✅ Admin criado:', admin.username);
-    console.log('📋 Credenciais: admin / admin123');
+    
+    // Criar funcionários
+    const employees = [
+      { username: 'funcionario1', password: 'func123', name: 'Funcionário 1', email: 'func1@crm.com' },
+      { username: 'funcionario2', password: 'func123', name: 'Funcionário 2', email: 'func2@crm.com' },
+      { username: 'funcionario3', password: 'func123', name: 'Funcionário 3', email: 'func3@crm.com' },
+      { username: 'operador1', password: 'oper123', name: 'Operador 1', email: 'oper1@crm.com' },
+      { username: 'operador2', password: 'oper123', name: 'Operador 2', email: 'oper2@crm.com' }
+    ];
+    
+    for (const emp of employees) {
+      const empPassword = await bcrypt.hash(emp.password, 10);
+      const employee = await prisma.user.upsert({
+        where: { username: emp.username },
+        update: {},
+        create: {
+          username: emp.username,
+          email: emp.email,
+          password: empPassword,
+          name: emp.name,
+          role: 'employee'
+        }
+      });
+      console.log(`✅ ${employee.name} criado: ${employee.username} / ${emp.password}`);
+    }
+    
+    console.log('\n📋 ===== CREDENCIAIS =====');
+    console.log('👑 ADMIN:');
+    console.log('   Usuário: admin');
+    console.log('   Senha: admin123');
+    console.log('\n👤 FUNCIONÁRIOS:');
+    console.log('   funcionario1 / func123');
+    console.log('   funcionario2 / func123');
+    console.log('   funcionario3 / func123');
+    console.log('   operador1 / oper123');
+    console.log('   operador2 / oper123');
+    console.log('========================\n');
 
   } catch (error: any) {
     console.error('❌ Erro ao inicializar banco:', error.message);

@@ -1,4 +1,5 @@
 import React from 'react';
+import logoJoaoFornecedor from '../assets/logo-joao-fornecedor.jpeg';
 
 type Channel = {
   id: string;
@@ -19,8 +20,14 @@ export default function ChannelSwitcher({ activeChannel, onSelectChannel }: Prop
 
   return (
     <div className="w-20 flex flex-col items-center py-4 bg-black border-r border-zinc-800 shrink-0 gap-4">
-      <div className="w-12 h-12 rounded-xl bg-yellow-400 flex items-center justify-center mb-2 text-black font-bold text-lg">
-        CRM
+      {/* Logo JOÃO FORNECEDOR - Pato com Moeda e Coroa - MAIOR E MAIS BONITA */}
+      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-black via-zinc-950 to-black flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(234,179,8,0.5)] border-2 border-yellow-500/50 relative overflow-visible p-2 hover:border-yellow-400 transition-all duration-300 hover:shadow-[0_0_40px_rgba(234,179,8,0.7)]">
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-transparent to-transparent rounded-2xl"></div>
+        <img 
+          src={logoJoaoFornecedor} 
+          alt="JOÃO FORNECEDOR" 
+          className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_10px_rgba(234,179,8,0.6)]"
+        />
       </div>
 
       <div className="flex flex-col gap-2 w-full px-2">
